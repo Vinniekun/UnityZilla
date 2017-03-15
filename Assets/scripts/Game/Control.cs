@@ -5,6 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class Control : MonoBehaviour {
 
+
+
 	void Actions(){
 		if (Input.GetButtonDown ("Jump"))
             SceneManager.LoadScene("Game");

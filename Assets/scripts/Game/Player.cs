@@ -2,12 +2,18 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class Player : MonoBehaviour {
 
-	public int life = 4;
+	private int life = 4;
 
-	public Rigidbody2D body;
+    public GameObject grapeController;
+
+
+    public GameObject ui_life_bar;
+
+    private bool is_drunk = false;
 
 	public float jumpSpeed = 1.0f;
 	public float gravity = 30.0f;
@@ -30,25 +36,82 @@ public class Player : MonoBehaviour {
     const int max_time_invunerable = 60;
 
     public bool transparente = false;
-    Image image;
-    Color c;
 
     void Start () {
-		body = GetComponent<Rigidbody2D> ();
 		invertGrav = gravity * airTime;
         distanceToGround = GetComponent<BoxCollider2D>().bounds.extents.y;
         GetGrounds();
-        image = GetComponent<Image>();
     }
 
-    private void OnTriggerEnter2D(Collision2D collision)
+    //switch case
+    private void OnTriggerEnter2D(Collider2D collision)
     {
-        if (collision.gameObject.tag == "Wave" && !invunerable){
-            Debug.Log("bateu");
-            life -= 1;
-            invunerable = true;
+        if (collision.gameObject.tag == "Wave" && !invunerable)
+        {
+            CollideWithWave();
+        }
+
+        else if (collision.gameObject.tag == "Grape")
+        {
+            grapeController.GetComponent<GrapeController>().GetGrape();
+            Destroy(collision.gameObject);
+        }
+
+        else if (collision.gameObject.tag == "Bubbly")
+        {
+            GameObject.FindGameObjectWithTag("Score").GetComponent<Score>().AddScore(4);
+
+            Destroy(collision.gameObject);
+        }
+
+        else if (collision.gameObject.tag == "Rose")
+        {
+            GameObject.FindGameObjectWithTag("Score").GetComponent<Score>().AddScore(10);
+
+            Destroy(collision.gameObject);
+        }
+
+        else if (collision.gameObject.tag == "Beer")
+        {
+            Is_Drunk();
+            Destroy(collision.gameObject);
         }
     }
+
+    public void Is_Drunk()
+    {
+        GameObject.FindGameObjectWithTag("Score").GetComponent<Score>().AddScore(-5);
+    }
+
+
+
+
+    private void CollideWithWave()
+    {
+        life -= 1;
+        CheckIfIsDead();
+        CheckIfGiantChickenAppears();
+
+        ui_life_bar.GetComponent<UI_life_controller>().ChangePlayerUIPosition(life);
+        invunerable = true;
+    }
+
+    private void CheckIfGiantChickenAppears()
+    {
+        if (life == 1)
+        {
+            grapeController.GetComponent<GrapeController>().EnterChickenMode();
+            //Invoka a galinha gigante
+        }
+    }
+
+    private void CheckIfIsDead()
+    {
+        if (life == 0)
+            SceneManager.LoadScene("Menu");
+    }
+
+
 
     
     public void GetGrounds()
@@ -68,13 +131,13 @@ public class Player : MonoBehaviour {
 		if (on_ground) {
 			forceY = 0;
 			invertGrav = gravity * airTime;
-			if (Input.GetKey(KeyCode.Space)) { 
+			if (Input.GetButton("Jump")) { 
 				forceY = jumpSpeed;
                 on_ground = false;
             }
         }
 
-		if (Input.GetKey (KeyCode.Space) && forceY != 0) {
+		if (Input.GetButton("Jump") && forceY != 0) {
 			invertGrav -= Time.deltaTime;
 			forceY += invertGrav * Time.deltaTime;
 		}
@@ -85,7 +148,8 @@ public class Player : MonoBehaviour {
 		    gameObject.transform.position += (moveDirection * Time.deltaTime);
             CheckIfOnTheGround();
         }
-           
+
+        
     }
 
 
@@ -96,15 +160,23 @@ public class Player : MonoBehaviour {
         }
     }
 
+    public void GainLife()
+    {
+        life += 1;
+    }
+
+    public int GetLife()
+    {
+        return life;
+    }
+
     private void UpdateDamageStatus(){
         if (time_invunerable < max_time_invunerable)
             time_invunerable++;
-        else
-        {
+        else {
             invunerable = false;
             time_invunerable = 0;
-            c.a = 0;
-            image.color = c;
+            GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 1f);
         }
     }
 
@@ -116,7 +188,13 @@ public class Player : MonoBehaviour {
     void FixedUpdate () {
         if (grounds == null)
             GetGrounds();
-		Jump ();
+        /*
+        if (Input.GetKey("left"))
+            transform.Rotate(0, 0, 100 * Time.deltaTime, Space.Self);
+        if (Input.GetKey("right"))
+            transform.Rotate(0, 0, -100 * Time.deltaTime, Space.Self);
+        */
+        Jump ();
         CheckIfItsDamaged();
 	}
 }
