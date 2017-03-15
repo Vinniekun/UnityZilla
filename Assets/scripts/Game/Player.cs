@@ -9,6 +9,10 @@ public class Player : MonoBehaviour {
 
 	public Rigidbody2D body;
 
+    public GameObject playerUI;
+    public GameObject[] ui_lifes;
+
+
 	public float jumpSpeed = 1.0f;
 	public float gravity = 30.0f;
 	public float gravityForce = 3.0f;
@@ -41,13 +45,19 @@ public class Player : MonoBehaviour {
         image = GetComponent<Image>();
     }
 
-    private void OnTriggerEnter2D(Collision2D collision)
+    private void OnTriggerEnter2D(Collider2D collision)
     {
+        Debug.Log(invunerable);
         if (collision.gameObject.tag == "Wave" && !invunerable){
-            Debug.Log("bateu");
             life -= 1;
+            ChangePlayerUIPosition();
             invunerable = true;
         }
+    }
+
+    private void ChangePlayerUIPosition() {
+
+        playerUI.transform.position = ui_lifes[life - 1].transform.position;
     }
 
     
@@ -99,12 +109,10 @@ public class Player : MonoBehaviour {
     private void UpdateDamageStatus(){
         if (time_invunerable < max_time_invunerable)
             time_invunerable++;
-        else
-        {
+        else {
             invunerable = false;
             time_invunerable = 0;
-            c.a = 0;
-            image.color = c;
+            GetComponent<SpriteRenderer>().color = new Color(1f, 1f, 1f, 1f);
         }
     }
 
